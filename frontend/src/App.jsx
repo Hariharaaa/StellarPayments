@@ -8,8 +8,7 @@ import {
   donate,
   registerRecipient,
   disburse,
-  formatXlm,
-  stroopsToXlm
+  formatXlm
 } from './stellar'
 import { ADMIN_ADDRESS, STELLAR_EXPERT_URL, MAX_DISBURSEMENT_CAP } from './config'
 import TransactionModal from './components/TransactionModal'
@@ -24,7 +23,6 @@ import {
   LogOut,
   Wallet,
   Coins,
-  CheckCircle,
   AlertTriangle,
   Users,
   Shield,
@@ -226,18 +224,6 @@ export default function App() {
 
   // Check if current connected user is the registered admin/org
   const isAdmin = address === ADMIN_ADDRESS
-
-  // Steps tracker UI stages
-  const getStepClass = (stepStage) => {
-    const stages = ['Preparing', 'Signing', 'Submitting', 'Pending', 'Success']
-    const currentIdx = stages.indexOf(txStage)
-    const stepIdx = stages.indexOf(stepStage)
-
-    if (txStage === 'Failed') return 'tx-step' // default
-    if (currentIdx === stepIdx) return 'tx-step active'
-    if (currentIdx > stepIdx) return 'tx-step completed'
-    return 'tx-step'
-  }
 
   return (
     <div className="container">
@@ -456,7 +442,6 @@ export default function App() {
                         <option value="" disabled>-- Select a registered recipient --</option>
                         {recipients.map((r, i) => {
                           const receivedXlm = Number(r.totalReceived) / 10_000_000
-                          const remainingXlm = MAX_DISBURSEMENT_CAP - receivedXlm
                           return (
                             <option key={i} value={r.recipient}>
                               {r.verificationId} — {r.region} (Spent: {receivedXlm.toFixed(1)}/{MAX_DISBURSEMENT_CAP} XLM)
