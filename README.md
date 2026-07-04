@@ -109,3 +109,13 @@ The UI is built to handle and display error states gracefully. Here is how to tr
   - **How to test**: Check the active Relief Fund Balance on the dashboard.
   - **Action**: As the Admin, try to disburse an amount greater than the Relief Fund Balance.
   - **Result**: The transaction modal aborts and displays: *"The Relief Fund does not have enough balance to fulfill this disbursement."*
+
+---
+
+## 📸 Screenshots
+
+### 1. Available Wallets Connection Modal (Freighter & xBull)
+![Available Wallets](wallet-connection-button.png)
+
+### 2. Wallet Connected & Balance Dashboard View
+![Wallet Connected and Balance](wallet-connected.png)
