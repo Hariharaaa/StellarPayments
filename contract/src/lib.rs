@@ -1,8 +1,16 @@
 #![no_std]
 
 use soroban_sdk::{
-    contract, contractimpl, contracttype, token, Address, Env, Symbol, Vec, String,
+    contract, contractimpl, contracttype, token, Address, Env, Symbol, Vec,
 };
+
+// ── Recipient Registry Client Trait ───────────────────────────────────────────
+
+#[soroban_sdk::contractclient(name = "RecipientRegistryClient")]
+pub trait RecipientRegistryInterface {
+    fn is_eligible(env: Env, recipient: Address) -> bool;
+    fn mark_disbursed(env: Env, recipient: Address, amount: i128);
+}
 
 // ── Storage Key Types ─────────────────────────────────────────────────────────
 
@@ -10,18 +18,11 @@ use soroban_sdk::{
 pub enum DataKey {
     Admin,
     Token,
-    Recipients,
+    Registry,
     History,
 }
 
 // ── Return Types ──────────────────────────────────────────────────────────────
-
-#[contracttype]
-#[derive(Clone, Debug, PartialEq)]
-pub struct RecipientInfo {
-    pub recipient: Address,
-    pub name_or_id: String,
-}
 
 #[contracttype]
 #[derive(Clone, Debug, PartialEq)]
@@ -38,16 +39,15 @@ pub struct ReliefFundContract;
 #[contractimpl]
 impl ReliefFundContract {
     /// Initialize the Relief Fund
-    pub fn init(env: Env, admin: Address, token: Address) {
+    pub fn init(env: Env, admin: Address, token: Address, registry: Address) {
         if env.storage().instance().has(&DataKey::Admin) {
             panic!("already initialized");
         }
         env.storage().instance().set(&DataKey::Admin, &admin);
         env.storage().instance().set(&DataKey::Token, &token);
+        env.storage().instance().set(&DataKey::Registry, &registry);
 
-        let empty_recipients: Vec<RecipientInfo> = Vec::new(&env);
         let empty_history: Vec<Disbursement> = Vec::new(&env);
-        env.storage().instance().set(&DataKey::Recipients, &empty_recipients);
         env.storage().instance().set(&DataKey::History, &empty_history);
     }
 
@@ -71,37 +71,7 @@ impl ReliefFundContract {
         );
     }
 
-    /// Register a verified recipient (admin-only)
-    pub fn register_recipient(env: Env, admin: Address, recipient: Address, name_or_id: String) {
-        admin.require_auth();
-        let stored_admin: Address = env.storage().instance().get(&DataKey::Admin).unwrap();
-        if admin != stored_admin {
-            panic!("not authorized: not the admin");
-        }
-
-        let mut recipients: Vec<RecipientInfo> = env.storage().instance().get(&DataKey::Recipients).unwrap();
-
-        // Check if recipient is already registered
-        for r in recipients.iter() {
-            if r.recipient == recipient {
-                panic!("recipient already registered");
-            }
-        }
-
-        recipients.push_back(RecipientInfo {
-            recipient: recipient.clone(),
-            name_or_id: name_or_id.clone(),
-        });
-        env.storage().instance().set(&DataKey::Recipients, &recipients);
-
-        // Emit registration event
-        env.events().publish(
-            (Symbol::new(&env, "recipient_registered"), recipient),
-            name_or_id,
-        );
-    }
-
-    /// Disburse funds to a registered recipient (admin-only)
+    /// Disburse funds to a recipient (admin-only). Checks eligibility and cap via RecipientRegistry.
     pub fn disburse(env: Env, admin: Address, recipient: Address, amount: i128) {
         admin.require_auth();
         let stored_admin: Address = env.storage().instance().get(&DataKey::Admin).unwrap();
@@ -113,32 +83,30 @@ impl ReliefFundContract {
             panic!("disbursement amount must be positive");
         }
 
-        // Check if recipient is registered
-        let recipients: Vec<RecipientInfo> = env.storage().instance().get(&DataKey::Recipients).unwrap();
-        let mut is_registered = false;
-        for r in recipients.iter() {
-            if r.recipient == recipient {
-                is_registered = true;
-                break;
-            }
-        }
-        if !is_registered {
-            panic!("recipient is not registered");
+        // 1. Fetch registry and check eligibility via inter-contract call
+        let registry_address: Address = env.storage().instance().get(&DataKey::Registry).unwrap();
+        let registry_client = RecipientRegistryClient::new(&env, &registry_address);
+
+        if !registry_client.is_eligible(&recipient) {
+            panic!("recipient is not eligible");
         }
 
+        // 2. Fetch token and check balance
         let token_id: Address = env.storage().instance().get(&DataKey::Token).unwrap();
         let token_client = token::Client::new(&env, &token_id);
 
-        // Check fund balance
         let balance = token_client.balance(&env.current_contract_address());
         if balance < amount {
             panic!("insufficient fund balance");
         }
 
-        // Perform payment transfer
+        // 3. Perform transfer
         token_client.transfer(&env.current_contract_address(), &recipient, &amount);
 
-        // Record in history
+        // 4. Update recipient's total received and check cap via inter-contract call
+        registry_client.mark_disbursed(&recipient, &amount);
+
+        // 5. Record in history
         let mut history: Vec<Disbursement> = env.storage().instance().get(&DataKey::History).unwrap();
         history.push_back(Disbursement {
             recipient: recipient.clone(),
@@ -164,11 +132,6 @@ impl ReliefFundContract {
     pub fn get_disbursement_history(env: Env) -> Vec<Disbursement> {
         env.storage().instance().get(&DataKey::History).unwrap_or_else(|| Vec::new(&env))
     }
-
-    /// Get all registered recipients
-    pub fn get_recipients(env: Env) -> Vec<RecipientInfo> {
-        env.storage().instance().get(&DataKey::Recipients).unwrap_or_else(|| Vec::new(&env))
-    }
 }
 
 // ── Unit Tests ────────────────────────────────────────────────────────────────
@@ -178,9 +141,14 @@ mod test {
     use super::*;
     use soroban_sdk::testutils::Address as _;
     use soroban_sdk::String;
+    
+    // Import the RecipientRegistryContract for deployment in tests
+    use recipient_registry::{
+        RecipientRegistryContract, RecipientRegistryContractClient,
+    };
 
     #[test]
-    fn test_relief_fund_flow() {
+    fn test_relief_fund_successful_flow() {
         let env = Env::default();
         env.mock_all_auths();
 
@@ -188,7 +156,7 @@ mod test {
         let donor = Address::generate(&env);
         let recipient = Address::generate(&env);
 
-        // Register stellar token
+        // 1. Deploy stellar asset token
         let token_admin = Address::generate(&env);
         let token_id = env
             .register_stellar_asset_contract_v2(token_admin.clone())
@@ -196,49 +164,59 @@ mod test {
         let token_admin_client = token::StellarAssetClient::new(&env, &token_id);
         let token_client = token::Client::new(&env, &token_id);
 
-        // Mint some test tokens to donor
         token_admin_client.mint(&donor, &1000);
 
-        // Register and deploy ReliefFund contract
-        let contract_id = env.register(ReliefFundContract, ());
-        let client = ReliefFundContractClient::new(&env, &contract_id);
+        // 2. Deploy RecipientRegistry
+        let registry_id = env.register(RecipientRegistryContract, ());
+        let registry_client = RecipientRegistryContractClient::new(&env, &registry_id);
 
-        // Initialize
-        client.init(&admin, &token_id);
+        // 3. Deploy ReliefFund
+        let fund_id = env.register(ReliefFundContract, ());
+        let fund_client = ReliefFundContractClient::new(&env, &fund_id);
+
+        // 4. Initialize both
+        registry_client.init(&admin, &fund_id, &500); // Max cap 500
+        fund_client.init(&admin, &token_id, &registry_id);
 
         // Verify initial state
-        assert_eq!(client.get_fund_balance(), 0);
-        assert_eq!(client.get_disbursement_history().len(), 0);
-        assert_eq!(client.get_recipients().len(), 0);
+        assert_eq!(fund_client.get_fund_balance(), 0);
+        assert_eq!(fund_client.get_disbursement_history().len(), 0);
 
-        // Donor donates 500 XLM
-        client.donate(&donor, &500);
-        assert_eq!(client.get_fund_balance(), 500);
-        assert_eq!(token_client.balance(&donor), 500);
+        // Donor donates 400
+        fund_client.donate(&donor, &400);
+        assert_eq!(fund_client.get_fund_balance(), 400);
 
-        // Admin registers recipient
-        let name_or_id = String::from_str(&env, "RECIPIENT_01");
-        client.register_recipient(&admin, &recipient, &name_or_id);
-        
-        let recipients = client.get_recipients();
-        assert_eq!(recipients.len(), 1);
-        assert_eq!(recipients.get(0).unwrap().recipient, recipient);
+        // Try disburse to unregistered recipient -> fails
+        let disburse_fail = fund_client.try_disburse(&admin, &recipient, &100);
+        assert!(disburse_fail.is_err());
 
-        // Admin disburses 300 XLM
-        client.disburse(&admin, &recipient, &300);
-        assert_eq!(client.get_fund_balance(), 200);
+        // Register recipient
+        registry_client.register_recipient(
+            &admin,
+            &recipient,
+            &String::from_str(&env, "East-Coast"),
+            &String::from_str(&env, "V-ID-1"),
+        );
+
+        // Disburse 300 -> succeeds
+        fund_client.disburse(&admin, &recipient, &300);
+        assert_eq!(fund_client.get_fund_balance(), 100);
         assert_eq!(token_client.balance(&recipient), 300);
 
-        // Verify disbursement history
-        let history = client.get_disbursement_history();
+        // Verify history
+        let history = fund_client.get_disbursement_history();
         assert_eq!(history.len(), 1);
         assert_eq!(history.get(0).unwrap().recipient, recipient);
         assert_eq!(history.get(0).unwrap().amount, 300);
+
+        // Verify registry updated total received
+        let info = registry_client.get_recipient_info(&recipient).unwrap();
+        assert_eq!(info.total_received, 300);
     }
 
     #[test]
-    #[should_panic(expected = "recipient is not registered")]
-    fn test_disburse_unregistered_fails() {
+    #[should_panic(expected = "recipient is not eligible")]
+    fn test_disburse_fails_if_unregistered() {
         let env = Env::default();
         env.mock_all_auths();
 
@@ -247,16 +225,23 @@ mod test {
         let token_id = env
             .register_stellar_asset_contract_v2(Address::generate(&env))
             .address();
-        let contract_id = env.register(ReliefFundContract, ());
-        let client = ReliefFundContractClient::new(&env, &contract_id);
 
-        client.init(&admin, &token_id);
-        client.disburse(&admin, &recipient, &100);
+        let registry_id = env.register(RecipientRegistryContract, ());
+        let registry_client = RecipientRegistryContractClient::new(&env, &registry_id);
+
+        let fund_id = env.register(ReliefFundContract, ());
+        let fund_client = ReliefFundContractClient::new(&env, &fund_id);
+
+        registry_client.init(&admin, &fund_id, &500);
+        fund_client.init(&admin, &token_id, &registry_id);
+
+        // Recipient is not registered -> panics
+        fund_client.disburse(&admin, &recipient, &100);
     }
 
     #[test]
     #[should_panic(expected = "insufficient fund balance")]
-    fn test_disburse_insufficient_fails() {
+    fn test_disburse_fails_if_insufficient_fund_balance() {
         let env = Env::default();
         env.mock_all_auths();
 
@@ -265,11 +250,24 @@ mod test {
         let token_id = env
             .register_stellar_asset_contract_v2(Address::generate(&env))
             .address();
-        let contract_id = env.register(ReliefFundContract, ());
-        let client = ReliefFundContractClient::new(&env, &contract_id);
 
-        client.init(&admin, &token_id);
-        client.register_recipient(&admin, &recipient, &String::from_str(&env, "Alice"));
-        client.disburse(&admin, &recipient, &100);
+        let registry_id = env.register(RecipientRegistryContract, ());
+        let registry_client = RecipientRegistryContractClient::new(&env, &registry_id);
+
+        let fund_id = env.register(ReliefFundContract, ());
+        let fund_client = ReliefFundContractClient::new(&env, &fund_id);
+
+        registry_client.init(&admin, &fund_id, &500);
+        fund_client.init(&admin, &token_id, &registry_id);
+
+        registry_client.register_recipient(
+            &admin,
+            &recipient,
+            &String::from_str(&env, "North"),
+            &String::from_str(&env, "ID-9"),
+        );
+
+        // Fund has 0 balance, trying to disburse 100 -> panics
+        fund_client.disburse(&admin, &recipient, &100);
     }
 }

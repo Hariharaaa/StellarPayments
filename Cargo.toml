@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "contract",
+    "contract/recipient_registry",
 ]
 resolver = "2"
 
