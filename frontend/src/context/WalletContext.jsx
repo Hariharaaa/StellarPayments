@@ -42,13 +42,14 @@ async function ensureKit() {
   if (kitReady) return Kit
   try {
     const sdkMod = await import('@creit.tech/stellar-wallets-kit/sdk')
+    const xBullMod = await import('@creit.tech/stellar-wallets-kit/modules/xbull')
     Kit = sdkMod.StellarWalletsKit
 
     // Initialize with both our custom Freighter module and the standard xBull module
     Kit.init({
       modules: [
         new CustomFreighterModule(),
-        new sdkMod.xBullModule()
+        new xBullMod.xBullModule()
       ],
       network: 'Test SDF Network ; September 2015',
     })
