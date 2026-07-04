@@ -32,7 +32,12 @@ class CustomFreighterModule {
     return { address: res.address }
   }
   async signTransaction(xdr, opts) {
-    const res = await freighterApi.signTransaction(xdr, opts)
+    const freighterOpts = {
+      network: opts?.network || (opts?.networkPassphrase?.includes('Test') ? 'TESTNET' : 'PUBLIC'),
+      networkPassphrase: opts?.networkPassphrase,
+      accountToSign: opts?.address || opts?.accountToSign,
+    }
+    const res = await freighterApi.signTransaction(xdr, freighterOpts)
     if (res.error) throw new Error(res.error)
     return { signedTxXdr: res.signedTxXdr || res.signedTransaction }
   }

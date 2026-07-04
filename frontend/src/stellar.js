@@ -119,6 +119,8 @@ export async function invokeContract({ method, args = [], sourceAddress, signTra
   try {
     signedXdr = await signTransaction(preparedTx.toXDR(), {
       networkPassphrase: NETWORK.networkPassphrase,
+      network: NETWORK.name.toUpperCase(),
+      address: sourceAddress,
     })
   } catch (e) {
     if (e.message?.includes('rejected') || e.message?.includes('cancel') || e.message?.includes('denied') || e.code === 'USER_REJECTED') {
