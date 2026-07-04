@@ -232,8 +232,10 @@ export default function App() {
         <div className="brand">
           <Coins className="brand-icon" />
           <div>
-            <h1 className="brand-title">Disaster Relief Rail</h1>
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Direct, Transparent Aid Disbursement</p>
+            <h1 className="brand-title">Relief Rail</h1>
+            <p style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)', fontWeight: '700', textTransform: 'uppercase', marginTop: '2px' }}>
+              Direct Aid Portal
+            </p>
           </div>
         </div>
 
@@ -280,9 +282,9 @@ export default function App() {
               <span>Synced live with Soroban Testnet smart contract</span>
             </div>
             {address && (
-              <div style={{ marginTop: '1.25rem', paddingTop: '1.25rem', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
-                <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Available Relief Funds (Your Wallet Balance):</span>
-                <strong style={{ fontFamily: 'var(--font-display)', color: 'white', fontSize: '1.1rem' }}>{walletBalance} XLM</strong>
+              <div style={{ marginTop: '1.25rem', paddingTop: '1.25rem', borderTop: '2px solid #5C5657', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', fontWeight: '700' }}>Your Wallet Balance:</span>
+                <strong style={{ fontFamily: 'var(--font-mono)', color: 'var(--c-white)', fontSize: '1.1rem', fontWeight: '800' }}>{walletBalance} XLM</strong>
               </div>
             )}
           </section>
@@ -496,7 +498,7 @@ export default function App() {
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
                         <div className="item-left">
                           <span className="item-title" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            <Shield size={14} style={{ color: 'var(--primary)' }} />
+                            <Shield size={14} />
                             {r.verificationId}
                           </span>
                           <span className="item-subtitle" style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
@@ -505,14 +507,14 @@ export default function App() {
                           </span>
                         </div>
                         <div className="item-right">
-                          <span className="brand-tag" style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem', background: 'rgba(16, 185, 129, 0.15)', color: 'var(--primary)' }}>
+                          <span className="brand-tag">
                             Verified
                           </span>
                         </div>
                       </div>
 
                       {/* Recipient Address */}
-                      <div style={{ fontFamily: 'monospace', fontSize: '0.725rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <div className="item-subtitle" style={{ fontFamily: 'var(--font-mono)' }}>
                         {r.recipient}
                       </div>
 
