@@ -68,16 +68,16 @@ sequenceDiagram
 
 | Component | Testnet Identifier / Link |
 |-----------|--------------------------|
-| **ReliefFund Contract (Contract A)** | `CCOVECQML366A4MIAFAWDMO6XAMJRDWIYMHFUOAQFH57CPSYODFNX3T4` |
-| **RecipientRegistry Contract (Contract B)** | `CASCLD3F7MDSFWYKE55G7ELYWTCHE5PR3PUUWSNFBYE24I2ZVL3EQQ7Z` |
+| **ReliefFund Contract (Contract A)** | `CBRXCUSDHECQWR3VWWNIOJ3NJXLGIJAXXXBFDKEOUSVUXAVJHHKKRGQQ` |
+| **RecipientRegistry Contract (Contract B)** | `CCO2MSZLIJS2HURXQELKLEIGCEE2FKUJRF7IGT3ZA4GRWI4SCOXVQ5YB` |
 | **Admin Organization Address** | `GAGQNYTIAVTZP6U3GOW3TUZ344UFOEKNZGRC6E2TWZ22PGAPL56Y3WRT` |
 | **Native XLM SAC Contract** | `CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC` |
-| **Stellar Expert Fund Contract Link** | [View ReliefFund on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CCOVECQML366A4MIAFAWDMO6XAMJRDWIYMHFUOAQFH57CPSYODFNX3T4) |
-| **Stellar Expert Registry Contract Link** | [View RecipientRegistry on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CASCLD3F7MDSFWYKE55G7ELYWTCHE5PR3PUUWSNFBYE24I2ZVL3EQQ7Z) |
+| **Stellar Expert Fund Contract Link** | [View ReliefFund on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CBRXCUSDHECQWR3VWWNIOJ3NJXLGIJAXXXBFDKEOUSVUXAVJHHKKRGQQ) |
+| **Stellar Expert Registry Contract Link** | [View RecipientRegistry on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CCO2MSZLIJS2HURXQELKLEIGCEE2FKUJRF7IGT3ZA4GRWI4SCOXVQ5YB) |
 
 ### 🔍 Real On-Chain Disbursement Audit
-*   **Disbursement Transaction Hash**: `aa0af3dcd8284ee15ec772dc9786e356bd4512a503005bd4b008f2c1de3ba200`
-*   **Stellar Expert Transaction Link**: [View Audit Trail on Stellar Expert](https://stellar.expert/explorer/testnet/tx/aa0af3dcd8284ee15ec772dc9786e356bd4512a503005bd4b008f2c1de3ba200)
+*   **Disbursement Transaction Hash**: `8db7cb5d15b3afd9193dcfe570b67515fe15e2db0653ab4efcf6adf26df617c0`
+*   **Stellar Expert Transaction Link**: [View Audit Trail on Stellar Expert](https://stellar.expert/explorer/testnet/tx/8db7cb5d15b3afd9193dcfe570b67515fe15e2db0653ab4efcf6adf26df617c0)
 
 ---
 
@@ -120,25 +120,25 @@ stellar contract deploy \
 
 # Initialize RecipientRegistry (Link it to ReliefFund address & set max cap)
 stellar contract invoke \
-  --id CASCLD3F7MDSFWYKE55G7ELYWTCHE5PR3PUUWSNFBYE24I2ZVL3EQQ7Z \
+  --id CCO2MSZLIJS2HURXQELKLEIGCEE2FKUJRF7IGT3ZA4GRWI4SCOXVQ5YB \
   --source-account deployer \
   --network testnet \
   -- \
   init \
   --admin $(stellar keys address deployer) \
-  --fund_contract CCOVECQML366A4MIAFAWDMO6XAMJRDWIYMHFUOAQFH57CPSYODFNX3T4 \
+  --fund_contract CBRXCUSDHECQWR3VWWNIOJ3NJXLGIJAXXXBFDKEOUSVUXAVJHHKKRGQQ \
   --max_cap 5000000000 # 500 XLM max cap
 
 # Initialize ReliefFund (Link to RecipientRegistry & XLM SAC)
 stellar contract invoke \
-  --id CCOVECQML366A4MIAFAWDMO6XAMJRDWIYMHFUOAQFH57CPSYODFNX3T4 \
+  --id CBRXCUSDHECQWR3VWWNIOJ3NJXLGIJAXXXBFDKEOUSVUXAVJHHKKRGQQ \
   --source-account deployer \
   --network testnet \
   -- \
   init \
   --admin $(stellar keys address deployer) \
   --token CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC \
-  --registry CASCLD3F7MDSFWYKE55G7ELYWTCHE5PR3PUUWSNFBYE24I2ZVL3EQQ7Z
+  --registry CCO2MSZLIJS2HURXQELKLEIGCEE2FKUJRF7IGT3ZA4GRWI4SCOXVQ5YB
 ```
 
 ### 3. Run Frontend Dashboard Locally
