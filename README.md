@@ -1,5 +1,21 @@
 # 🚄 Disaster Relief Rail 
 
+## 📸 Screenshots
+
+### Before Connection
+![Before Connection](./before%20connection.png)
+
+### Wallet Options
+![Wallet Options](./wallet%20options.png)
+
+### After Wallet Connection
+![After Wallet Connection](./after%20wallet%20connection.png)
+
+### Deployed Contract Address
+![Deployed Contract Address](./Deployed%20contract%20address.png)
+
+---
+
 Disaster Relief Rail is a direct, transparent aid disbursement dApp built on the **Stellar Soroban testnet**. It enables relief organizations to pool donor contributions in a transparent smart contract and disburse aid directly to verified recipient wallets — with full public cryptographic auditability, real-time analytics, error monitoring, and a first-class mobile experience.
 
 ---
@@ -246,21 +262,7 @@ Dismissed state persists in `localStorage` (`reliefRailOnboardingSeen`). To re-s
 | RPC/network failure | Friendly message, captured in Sentry |
 | Already registered | Contract typed error, human-readable message |
 
----
 
-## 📸 Screenshots
-
-### Before Connection
-![Before Connection](./before%20connection.png)
-
-### Wallet Options
-![Wallet Options](./wallet%20options.png)
-
-### After Wallet Connection
-![After Wallet Connection](./after%20wallet%20connection.png)
-
-### Deployed Contract Address
-![Deployed Contract Address](./Deployed%20contract%20address.png)
 
 ---
 
