@@ -25,6 +25,13 @@ Disaster Relief Rail is a direct, transparent aid disbursement dApp built on the
 
 ---
 
+## 🔗 Live Demo & Video Walkthrough
+
+- **🌐 Live App**: [disasterreliefrail.vercel.app](https://disasterreliefrail.vercel.app/)
+- **🎥 Demo Video**: [Watch on Google Drive](https://drive.google.com/file/d/1OesXyUfTkd8ADd_GOIDWRc4BcUwIrCA6/view?usp=drive_link)
+
+---
+
 ## 🌍 The Vision & Mission
 
 Traditional disaster relief is often plagued by high administrative overhead, delays, and opacity. **Disaster Relief Rail** solves this with a direct line between donors, organizations, and recipients:
