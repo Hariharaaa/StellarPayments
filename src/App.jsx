@@ -38,8 +38,6 @@ import {
   Shield,
   MapPin,
   FileText,
-  HelpCircle,
-  ExternalLink as ExtLink,
   Target,
   Plus
 } from 'lucide-react'

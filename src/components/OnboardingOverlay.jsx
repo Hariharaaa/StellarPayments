@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Coins, Wallet, ArrowRight, ChartBar, Zap } from 'lucide-react'
+import { Coins, ArrowRight } from 'lucide-react'
 
 const STORAGE_KEY = 'reliefRailOnboardingSeen'
 

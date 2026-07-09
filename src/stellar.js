@@ -433,14 +433,14 @@ export function subscribeToFundEvents(onEvent) {
           let topicName = '';
           try {
             topicName = scValToNative(topicScVal);
-          } catch (e) { continue; }
+          } catch (_e) { continue; }
           
           let amount = 0n;
           try {
             if (evt.value) {
               amount = BigInt(scValToNative(evt.value));
             }
-          } catch (e) {}
+          } catch (_e) {}
 
           if (topicName === 'donation_received') {
             const donor = scValToNative(evt.topic[1]);

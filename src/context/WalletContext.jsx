@@ -137,6 +137,7 @@ export function WalletProvider({ children }) {
   )
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useWallet() {
   return useContext(WalletContext)
 }

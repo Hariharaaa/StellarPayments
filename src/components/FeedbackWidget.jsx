@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { MessageSquare, X, Send, CheckCircle } from 'lucide-react'
+import { MessageSquare, X, Send } from 'lucide-react'
 import { trackEvent } from '../analytics'
 
 const FORMSPREE_ID = import.meta.env.VITE_FORMSPREE_ID || ''
